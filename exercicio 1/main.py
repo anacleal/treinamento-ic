@@ -5,9 +5,9 @@ from modeling import modeling
 def main():
     datafile = pd.read_csv('../SMSSpamCollection', sep = '\t', names=['label', 'text'])
     
-    datafile = data_analisis(datafile)
+    #datafile = data_analisis(datafile)
 
-    df_limpo = modeling(datafile)
+    datafile = modeling(datafile)
 
 if __name__ == "__main__":
     main()

@@ -3,13 +3,18 @@ import numpy as np
 
 #cb recommender
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import linear_kernel
+from sklearn.metrics.pairwise import linear_kernel, cosine_similarity
+#
+
+#cf recommender
+from scipy import sparse
 #
 
 class MostPopularRecommender:
     def __init__(self):
         self.popularity_series = None
         self.train_data = None
+        self.name = "Most Popular"
 
     def fit(self, train_data, movies_metadata=None):
 
@@ -97,5 +102,76 @@ class ContentBasedRecommender:
 
         return recs.head(n)
     
-# class Collaborative:
-#     def __init__(self, df_ratings, df_movies):
+class CollaborativeFilteringRecommender:
+    def __init__(self):
+        self.user_item_matrix = None
+        self.user_siml_matrix = None
+        self.train_data = None
+        self.name = "Collaborative Filtering"
+
+    def fit(self, train_data):
+        print(f"treinando {self.name}...")
+        self.train_data = train_data
+
+        #cria a matriz pivot - linhas (usuarios) x colunas (filmes)
+        #matriz esparsa pra economizar ram
+
+        pivot_df = train_data.piot(index = 'Cust_Id', columns = 'Movie_Id', values = 'Rating').fillna(0)
+        self.user_item_matrix = sparse.csr_matrix(pivot_df.values)
+
+        #calcula o cosseno (similaridade)
+
+        self.user_siml_matrix = cosine_similarity(self.user_item_matrix)
+        self.user_ids = pivot_df.index
+        self.movie_ids = pivot_df.columns
+        print("treinamento concluido")
+
+    def recommend(self, user_id, n=10):
+        if user_id not in self.user_ids: return[]
+
+        user_idx = list(self.user_ids).index(user_id)
+
+        #score de similaridade do usuário atual com todos os outros
+
+        siml_scores = self.user_siml_matrix[user_idx]
+
+        #media ponderada similaridade x notas dadas --> gera uma pontuação pra cada filme baseada no gosto dos vizinhos
+
+        preds = siml_scores.dot(self.user_item_matrix.toarray()) / np.array([np.abs(siml_scores).sum()])
+        recs = pd.DataFrame({'Movie_Id': self.movie_ids, 'score': preds})
+
+        #filtra o q o usuario ja viu
+
+        seen_items = self.train_data[self.train_data['Cust_Id'] == user_id]['Movie_Id']
+        recs = recs[~recs['Movie_Id'].isin(seen_items)]
+
+        return recs.sort_values('score', ascending=False).head(n)
+    
+class HybridRecommender:
+    def __init___(self, cb_model, cf_model, cb_weight = 0.5, cf_weight = 0.5):
+        # cb_weight: Peso para o Content-Based (0.0 a 1.0)
+        # cf_weight: Peso para o Collaborative (0.0 a 1.0)
+
+        self.cb_model = cb_model
+        self.cf_model = cf_model
+        self.cb_weight = cb_weight
+        self.cf_weight = cf_weight
+        self.name = "Hybrid"
+
+    def recommend(self, user_id, n=10):
+        #pega a recomendação de ambos os modelos
+
+        df_cb = self.cb_model.recommend(user_id, n=n*2)
+        df_cf = self.cf_model.recommend(user_id, n=n*2)
+
+        #normaliza os scores (entre 0 e 1) pra poder somar
+        df_cb['score'] = df_cb['score'] / df_cb['score'].max()
+        df_cf['score'] = df_cf['score'] / df_cf['score'].max()
+        
+        #merge dos resultados pelo ID do Filme
+        hybrid_df = pd.merge(df_cb, df_cf, on='Movie_Id', how='outer', suffixes=('_cb', '_cf')).fillna(0)
+        
+        #média ponderada
+        hybrid_df['final_score'] = (hybrid_df['score_cb'] * self.cb_weight) + (hybrid_df['score_cf'] * self.cf_weight)
+        
+        return hybrid_df.sort_values('final_score', ascending=False).head(n)

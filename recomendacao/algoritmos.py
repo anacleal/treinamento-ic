@@ -61,23 +61,23 @@ class ContentBasedRecommender:
 
         #### alinhar o id do filme com a linha da matriz, pro calculo correto do vetor do tfidf
 
-        self.movie_indices = pd.Series(self.df_movies.index, index=self.df_movies['movieId'])
+        self.movie_indices = pd.Series(self.df_movies.index, index=self.df_movies['Movie_Id'])
 
-    def recommend(self, user_id, n=10, remove_seen = True):
+    def recommend(self, user_id, top_n=10, remove_seen = True):
         #usar so filmes que ele deu >=4 estrelas
-        user_history = self.df_ratings[(self.df_ratings['userId'] == user_id) & (self.df_ratings['rating'] >= 4)]
+        user_history = self.df_ratings[(self.df_ratings['Cust_Id'] == user_id) & (self.df_ratings['Rating'] >= 4)]
 
         if user_history.empty:
-            return pd.DataFrame(columns=['movieId', 'score'])
+            return pd.DataFrame(columns=['Movie_Id', 'score'])
         
-        liked_ids = user_history['movieId'].tolist()
+        liked_ids = user_history['Movie_Id'].tolist()
 
         ## achar os filmes na matriz
 
         valid_index = [self.movie_index[mid] for mid in liked_ids if mid in self.movie_index]
 
         if not valid_index:
-            return pd.DataFrame(columns=['movieId', 'score'])
+            return pd.DataFrame(columns=['Movie_Id', 'score'])
         
         ## similaridade em lote -- linear kernel (calcular o cosseno)
 
@@ -90,17 +90,17 @@ class ContentBasedRecommender:
         ## gerar o ranking
 
         recs = pd.DataFrame({
-            'movieId': self.df_movies['movieId'].values,
+            'Movie_Id': self.df_movies['Movie_Id'].values,
             'score': total_scores
         }).sort_values('score', ascending= False)
 
         ## filtrar o que ela ja assistiu
 
         if remove_seen:
-            seen_items = self.df_ratings[self.df_ratings['userId'] == user_id]['movieId'].unique()
+            seen_items = self.df_ratings[self.df_ratings['Cust_Id'] == user_id]['movieId'].unique()
             recs = recs[~recs['movieId'].isin(seen_items)]
 
-        return recs.head(n)
+        return recs.head(top_n)
     
 class CollaborativeFilteringRecommender:
     def __init__(self):
@@ -116,7 +116,7 @@ class CollaborativeFilteringRecommender:
         #cria a matriz pivot - linhas (usuarios) x colunas (filmes)
         #matriz esparsa pra economizar ram
 
-        pivot_df = train_data.piot(index = 'Cust_Id', columns = 'Movie_Id', values = 'Rating').fillna(0)
+        pivot_df = train_data.pivot(index = 'Cust_Id', columns = 'Movie_Id', values = 'Rating').fillna(0)
         self.user_item_matrix = sparse.csr_matrix(pivot_df.values)
 
         #calcula o cosseno (similaridade)
@@ -126,7 +126,7 @@ class CollaborativeFilteringRecommender:
         self.movie_ids = pivot_df.columns
         print("treinamento concluido")
 
-    def recommend(self, user_id, n=10):
+    def recommend(self, user_id, top_n=10):
         if user_id not in self.user_ids: return[]
 
         user_idx = list(self.user_ids).index(user_id)
@@ -145,10 +145,10 @@ class CollaborativeFilteringRecommender:
         seen_items = self.train_data[self.train_data['Cust_Id'] == user_id]['Movie_Id']
         recs = recs[~recs['Movie_Id'].isin(seen_items)]
 
-        return recs.sort_values('score', ascending=False).head(n)
+        return recs.sort_values('score', ascending=False).head(top_n)
     
 class HybridRecommender:
-    def __init___(self, cb_model, cf_model, cb_weight = 0.5, cf_weight = 0.5):
+    def __init__(self, cb_model, cf_model, cb_weight = 0.5, cf_weight = 0.5):
         # cb_weight: Peso para o Content-Based (0.0 a 1.0)
         # cf_weight: Peso para o Collaborative (0.0 a 1.0)
 
@@ -158,7 +158,7 @@ class HybridRecommender:
         self.cf_weight = cf_weight
         self.name = "Hybrid"
 
-    def recommend(self, user_id, n=10):
+    def recommend(self, user_id, top_n=10):
         #pega a recomendação de ambos os modelos
 
         df_cb = self.cb_model.recommend(user_id, n=n*2)
@@ -174,4 +174,4 @@ class HybridRecommender:
         #média ponderada
         hybrid_df['final_score'] = (hybrid_df['score_cb'] * self.cb_weight) + (hybrid_df['score_cf'] * self.cf_weight)
         
-        return hybrid_df.sort_values('final_score', ascending=False).head(n)
+        return hybrid_df.sort_values('final_score', ascending=False).head(top_n)

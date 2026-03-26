@@ -20,7 +20,7 @@ def remove_accent(text):
         if unicodedata.category(c) != 'Mn'
     )
 
-def clean_text(text):
+def clean_text(text, tokenize=False):
 
     text = remove_accent(text.lower())
     text = re.sub(r'\d+', 'numtoken', text)
@@ -33,5 +33,8 @@ def clean_text(text):
         for w in words 
         if w not in stop_words and len(w)>2
     ]
+
+    if tokenize:
+        return filtered
     
     return " ".join(filtered)

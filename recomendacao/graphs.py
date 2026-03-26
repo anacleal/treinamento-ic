@@ -89,3 +89,12 @@ class Visualizer:
         plt.ylabel('Total de Usuários')
         plt.grid(True)
         self._save_and_close('4_crescimento_usuarios.png')
+
+    def plot_model_comparison(self, results_df):
+        results_df.set_index('Modelo').plot(kind='bar', figsize=(12, 6))
+        plt.title('Comparação de Performance dos Algoritmos')
+        plt.ylabel('Score (0 a 1)')
+        plt.xticks(rotation=45)
+        plt.legend(loc='upper right')
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        self._save_and_close('comparacao_modelos.png')

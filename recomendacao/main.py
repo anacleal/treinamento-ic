@@ -8,7 +8,7 @@ import seaborn as sns
 from surprise import Reader, Dataset, SVD
 from surprise.model_selection import cross_validate
 
-from most_popular import MostPopularRecommender
+from algoritmos import MostPopularRecommender
 from data_analisis import data_analisis, data_cleaning
 from run_graphs import run_dt_analisis
 

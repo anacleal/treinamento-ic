@@ -12,7 +12,7 @@ def main():
     df = data_cleaning(df)
     
     # load títulos para o Content-Based
-    movies_df = pd.read_csv('movie_titles.csv', encoding='latin-1', header=None, names=['Movie_Id', 'Year', 'Name'])
+    movies_df = pd.read_csv('dataset/movie_titles.csv', encoding='latin-1', header=None, names=['Movie_Id', 'Year', 'Name'], on_bad_lines='skip') #vai pular todo filme q tem virgula no nome
     movies_df['genres_str'] = movies_df['Name'] #content based gambiarra :P
     
     # Treino e Teste (80/20)

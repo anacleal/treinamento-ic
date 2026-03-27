@@ -40,7 +40,7 @@ class MostPopularRecommender:
 
         return recommendations.head(top_n)
     
-#NAO CONSEGUI TESTAR PQ A BASE DE DADOS NÃO TINHA UMA COLUNA DE GENEROS (fiz supondo que tinha)
+#NAO CONSEGUI TESTAR O CB PQ A BASE DE DADOS NÃO TINHA UMA COLUNA DE GENEROS (fiz supondo que tinha)
 
 class ContentBasedRecommender:
 

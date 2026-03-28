@@ -4,4 +4,6 @@
 __pycache__/
 *.pdf
 recomendacao/dataset/
-NLP_1/dataset
+NLP_1/dataset/
+NLP_1/results/
+topic_modeling/TREC/

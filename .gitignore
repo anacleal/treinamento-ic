@@ -7,3 +7,4 @@ recomendacao/dataset/
 NLP_1/dataset/
 NLP_1/results/
 topic_modeling/TREC/
+topic_modeling/bertopic_graphs/

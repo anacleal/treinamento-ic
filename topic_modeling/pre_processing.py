@@ -23,7 +23,7 @@ def remove_accent(text):
 
 def clean_text(text):
     text = remove_accent(text.lower())
-    text = re.sub(r'\d+', 'numtoken', text) #substitui os números por um token
+    text = re.sub(r'\d+', '', text) #remoe caracteres numéricos
     text = re.sub(r'[^a-z\s]', '', text) #remove caracteres que não sejam letras ou espaços
     text = re.sub(r"\s+", " ", text) #substitui múltiplos espaços por um único espaço
 

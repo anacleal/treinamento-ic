@@ -6,5 +6,6 @@ __pycache__/
 recomendacao/dataset/
 NLP_1/dataset/
 NLP_1/results/
+NLP_1/comparacao_final_nlp.png
 topic_modeling/TREC/
 topic_modeling/bertopic_graphs/

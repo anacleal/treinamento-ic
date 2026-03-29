@@ -19,8 +19,6 @@ def main():
 
     print("\n--- TOPIC MODELING BERTopic ---\n")
     model, topics, probs = run_bertopic(df['text'].tolist())
-    # save_bertopic_results(model)
-
 
 if __name__ == "__main__":
     main()
